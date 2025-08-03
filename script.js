@@ -1,6 +1,7 @@
 // Public Vars
 let episodeCounter = 0;
 let searchValue = "";
+let firstTimeLoad = "true"; // for first time load
 let allEpisodes = [];
 let allShows = []; // for all Shows API
 function searchCounter(episodeList, episodeCounter) {
@@ -36,7 +37,7 @@ async function setup() {
   waitLoadMessage.textContent = "Loading episodes...";
   document.body.prepend(waitLoadMessage);
 
-  fetch("https://api.tvmaze.com/shows/82/episodes")
+  fetch("https://api.tvmaze.com/shows/1/episodes")
     .then((res) => {
       if (!res.ok) {
         throw new Error("Network error");
@@ -66,7 +67,7 @@ async function setup() {
           })
         : allEpisodes;
 
-      makePageForEpisodes(filtered);
+      makePageForEpisodes(allShows);
     })
     .catch((err) => {
       document.getElementById("status-message").textContent =
@@ -82,28 +83,31 @@ function formatEpisodeCode(season, number) {
   return `S${padNumber(season)}E${padNumber(number)}`;
 }
 
-function makePageForEpisodes(episodeList) {
+function makePageForEpisodes(listOfApi) {
   const containerEpisode = document.getElementById("episode-container");
   const templateEpisode = document.getElementById("episode-template");
-  searchCounter(episodeList, episodeCounter);
+  searchCounter(listOfApi, episodeCounter);
 
   containerEpisode.innerHTML = "";
 
-  episodeList.forEach((episode) => {
+  listOfApi.forEach((eachRecord) => {
     const clone = templateEpisode.content.cloneNode(true);
-    clone.querySelector("img").src = episode.image.medium;
-    clone.querySelector("img").alt = episode.name;
-    clone.querySelector(".title").textContent = episode.name;
-    clone.querySelector(".code").textContent = formatEpisodeCode(
-      episode.season,
-      episode.number
-    );
-    clone.querySelector(".summary").innerHTML = episode.summary;
-    clone.querySelector(".link").href = episode.url;
+    clone.querySelector("img").src = eachRecord.image.medium;
+    clone.querySelector("img").alt = eachRecord.name;
+    clone.querySelector(".title").textContent = eachRecord.name;
+    clone.querySelector(".code").textContent =
+      eachRecord.season !== undefined && eachRecord.number !== undefined
+        ? formatEpisodeCode(eachRecord.season, eachRecord.number)
+        : "Show";
+
+    // clone.querySelector(".code").textContent = formatEpisodeCode(12, 12);
+    clone.querySelector(".summary").innerHTML = eachRecord.summary;
+    clone.querySelector(".link").href = eachRecord.url;
 
     containerEpisode.append(clone);
   });
 }
+
 //
 function handleSearchEvent(event) {
   searchValue = event.target.value;
@@ -133,11 +137,12 @@ function dropBoxFill(allEpisodes) {
 
 /////// =====================> Aida Start
 // Show All Episodes
+
 function dropBoxAllShows(allShows) {
   const dropDBoxShows = document.getElementById("dDBAllShows");
   dropDBoxShows.innerHTML = "";
 
-  dropDBoxShows.add(new Option("Show All Episodes", "allShows"));
+  dropDBoxShows.add(new Option("Show All Shows", "allShows"));
 
   allShows.forEach((show) => {
     dropDBoxShows.add(new Option(show.name, show.id));
@@ -152,7 +157,7 @@ function handleDropDownChange(event) {
   switch (targetId) {
     case "dDBAllShows":
       if (selectedId === "allShows") {
-        setup();
+        makePageForEpisodes(allShows);
       } else {
         fetch(`https://api.tvmaze.com/shows/${selectedId}/episodes`)
           .then((res) => {
