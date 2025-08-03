@@ -55,18 +55,6 @@ async function setup() {
 
       episodeCounter = allEpisodes.length;
 
-      // Search box /Filtering
-      const filtered = searchValue
-        ? allEpisodes.filter((episode) => {
-            const name = episode.name.toLowerCase();
-            const summary = episode.summary
-              ? episode.summary.toLowerCase()
-              : "";
-            const search = searchValue.toLowerCase();
-            return name.includes(search) || summary.includes(search);
-          })
-        : allEpisodes;
-
       makePageForEpisodes(allShows);
     })
     .catch((err) => {
@@ -74,6 +62,26 @@ async function setup() {
         "⚠️ Failed to load episodes. Please try again later.";
     });
 }
+
+///////// =====================> Search Text Box Start
+function searchEpisodes(allEpisodes, searchValue) {
+  const filtered = searchValue
+    ? allEpisodes.filter((episode) => {
+        const name = episode.name.toLowerCase();
+        const summary = episode.summary ? episode.summary.toLowerCase() : "";
+        const search = searchValue.toLowerCase();
+        return name.includes(search) || summary.includes(search);
+      })
+    : allEpisodes;
+  makePageForEpisodes(filtered);
+}
+
+function handleSearchEvent(event) {
+  searchValue = event.target.value;
+  searchEpisodes(allEpisodes, searchValue);
+}
+
+////// =====================> search text box finish
 
 function padNumber(num) {
   return num.toString().padStart(2, "0");
@@ -106,12 +114,6 @@ function makePageForEpisodes(listOfApi) {
 
     containerEpisode.append(clone);
   });
-}
-
-//
-function handleSearchEvent(event) {
-  searchValue = event.target.value;
-  setup();
 }
 
 // Id is a "value" for Option ==> episode.id
@@ -179,7 +181,7 @@ function handleDropDownChange(event) {
 
     case "dropDownBoxFill":
       if (selectedId === "all") {
-        setup();
+        makePageForEpisodes(allEpisodes);
       } else {
         const selectedEpisode = allEpisodes.filter((ep) => ep.id == selectedId);
         episodeCounter = selectedEpisode.length;
