@@ -78,6 +78,7 @@ async function setup() {
 
   // Event Listeners
   document.getElementById("searchInput").addEventListener("keyup", handleSearchEvent);
+    document.getElementById("searchInput").addEventListener("search", handleSearchEvent);
   document.getElementById("dropDownBoxFill").addEventListener("change", handleDropDownChange);
   document.getElementById("dDBAllShows").addEventListener("change", handleDropDownChange);
 }
@@ -101,6 +102,7 @@ function handleDropDownChange(event) {
 
     case "dropDownBoxFill":
       if (selectedId === "all") {
+        episodeCounter = allShows.length;
         makePageForEpisodes(allEpisodes);
       } else {
         const selectedEpisode = allEpisodes.filter((ep) => ep.id == selectedId);
@@ -111,25 +113,17 @@ function handleDropDownChange(event) {
   }
 }
 
-///////// =====================> Search Text Box Start
-function searchEpisodes(allEpisodes, searchValue) {
-  const filtered = searchValue
-    ? allEpisodes.filter((episode) => {
-        const name = episode.name.toLowerCase();
-        const summary = episode.summary ? episode.summary.toLowerCase() : "";
-        const search = searchValue.toLowerCase();
-        return name.includes(search) || summary.includes(search);
-      })
-    : allEpisodes;
-  makePageForEpisodes(filtered);
-}
 
 function handleSearchEvent(event) {
   searchValue = event.target.value;
-  searchEpisodes(allEpisodes, searchValue);
-}
 
-////// =====================> search text box finish
+  if (searchValue === "" || searchValue.length === 0) {
+    document.getElementById("dropDownBoxFill").value = "all";
+    makePageForEpisodes(allEpisodes);
+  } else {
+    searchEpisodes(allEpisodes, searchValue);
+  }
+}
 
 
 //  ----------------------- Helper Function------------------------
@@ -149,6 +143,18 @@ function searchCounter(episodeList, episodeCounter) {
 
 
 //  ----------------------- render Function------------------------
+
+function searchEpisodes(allEpisodes, searchValue) {
+  const filtered = searchValue
+    ? allEpisodes.filter((episode) => {
+        const name = episode.name.toLowerCase();
+        const summary = episode.summary ? episode.summary.toLowerCase() : "";
+        const search = searchValue.toLowerCase();
+        return name.includes(search) || summary.includes(search);
+      })
+    : allEpisodes;
+  makePageForEpisodes(filtered);
+}
 
 function makePageForEpisodes(listOfApi) {
   const containerEpisode = document.getElementById("episode-container");
@@ -228,6 +234,14 @@ function makePageForShows(listOfShows) {
 
     clone.querySelector(".summary").innerHTML = eachShow.summary || "No summary available.";
     clone.querySelector(".link").href = eachShow.url || "#";
+
+    const card = clone.querySelector(".card");
+    card.addEventListener("click", function() {
+      // Update the dropdown to show the selected show
+      document.getElementById("dDBAllShows").value = eachShow.id;
+      // Fetch and display episodes for this show
+      fetchEpisodesByShowId(eachShow.id);
+    });
 
     containerEpisode.append(clone);
   });
