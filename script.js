@@ -1,18 +1,15 @@
-// Public Vars
+//  ----------------------- global variable ------------------------
 let episodeCounter = 0;
 let searchValue = "";
 let allEpisodes = [];
 let allShows = []; // for all Shows API
 
-///////// function for test
-function AidaTestFor() {
-  for (let i of allShows) {
-    console.log(i);
-  }
-}
+//  ----------------------- fetch Functions ------------------------
 
-//  ----------------------- fetch Function------------------------
-
+/**
+ * Fetches all TV shows from the TVMaze API and sorts them alphabetically
+ * @returns {Promise<Array>} Array of show objects sorted by name, or empty array on error
+ */
 async function fetchAllShows() {
   try {
     const response = await fetch("https://api.tvmaze.com/shows");
@@ -34,6 +31,11 @@ async function fetchAllShows() {
   }
 }
 
+/**
+ * Fetches all episodes for a specific TV show by its ID
+ * Shows loading message during fetch and updates UI when complete
+ * @param {number|string} showId - The ID of the show to fetch episodes for
+ */
 function fetchEpisodesByShowId(showId) {
   // Add loading message specifically for episode fetch
   const waitLoadMessage = document.createElement("p");
@@ -66,10 +68,12 @@ function fetchEpisodesByShowId(showId) {
     });
 }
 
-
-
 //  ----------------------- main setup  ------------------------
 
+/**
+ * Main initialization function that runs when the page loads
+ * Fetches shows, populates dropdowns, displays initial content, and sets up event listeners
+ */
 async function setup() {
     // Fetch all shows
   allShows = await fetchAllShows();
@@ -83,10 +87,12 @@ async function setup() {
   document.getElementById("dDBAllShows").addEventListener("change", handleDropDownChange);
 }
 
-
-
 //  ----------------------- Event lister logic  ------------------------
 
+/**
+ * Handles dropdown selection changes for both show and episode dropdowns
+ * @param {Event} event - The change event from the dropdown
+ */
 function handleDropDownChange(event) {
   const selectedId = event.target.value;
   const targetId = event.target.id;
@@ -113,7 +119,11 @@ function handleDropDownChange(event) {
   }
 }
 
-
+/**
+ * Handles search input events (typing and clearing)
+ * Filters episodes based on search term or resets to show all episodes when cleared
+ * @param {Event} event - The input event from the search box
+ */
 function handleSearchEvent(event) {
   searchValue = event.target.value;
 
@@ -125,25 +135,44 @@ function handleSearchEvent(event) {
   }
 }
 
-
 //  ----------------------- Helper Function------------------------
 
+/**
+ * Pads a number with leading zeros to ensure it's at least 2 digits
+ * @param {number} num - Number to pad
+ * @returns {string} Padded number as string (e.g., 1 becomes "01")
+ */
 function padNumber(num) {
   return num.toString().padStart(2, "0");
 }
 
+/**
+ * Formats season and episode numbers into standard TV format (e.g., S01E05)
+ * @param {number} season - Season number
+ * @param {number} number - Episode number
+ * @returns {string} Formatted episode code
+ */
 function formatEpisodeCode(season, number) {
   return `S${padNumber(season)}E${padNumber(number)}`;
 }
 
+/**
+ * Updates the search counter display to show current results vs total
+ * @param {Array} episodeList - Current filtered list of episodes
+ * @param {number} episodeCounter - Total number of episodes available
+ */
 function searchCounter(episodeList, episodeCounter) {
   const searchCounter = document.getElementById("searchCounter");
   searchCounter.textContent = `Displaying ${episodeList.length}/${episodeCounter} episode(s)`;
 }
 
-
 //  ----------------------- render Function------------------------
 
+/**
+ * Filters episodes based on search term in name or summary
+ * @param {Array} allEpisodes - Array of all episodes to search through
+ * @param {string} searchValue - Search term to filter by
+ */
 function searchEpisodes(allEpisodes, searchValue) {
   const filtered = searchValue
     ? allEpisodes.filter((episode) => {
@@ -156,6 +185,11 @@ function searchEpisodes(allEpisodes, searchValue) {
   makePageForEpisodes(filtered);
 }
 
+/**
+ * Renders episode cards on the page using the template
+ * Creates cards for each episode with image, title, episode code, summary, and link
+ * @param {Array} listOfApi - Array of episode objects to display
+ */
 function makePageForEpisodes(listOfApi) {
   const containerEpisode = document.getElementById("episode-container");
   const templateEpisode = document.getElementById("episode-template");
@@ -176,7 +210,7 @@ function makePageForEpisodes(listOfApi) {
   listOfApi.forEach((eachRecord) => {
     const clone = templateEpisode.content.cloneNode(true);
 
-    // mage null check
+    // Image null check
     const img = clone.querySelector("img");
     if (eachRecord.image && eachRecord.image.medium) {
       img.src = eachRecord.image.medium;
@@ -199,6 +233,11 @@ function makePageForEpisodes(listOfApi) {
   });
 }
 
+/**
+ * Renders show cards on the page using the template
+ * Creates clickable cards for each show that when clicked, loads that show's episodes
+ * @param {Array} listOfShows - Array of show objects to display
+ */
 function makePageForShows(listOfShows) {
   const containerEpisode = document.getElementById("episode-container");
   const templateEpisode = document.getElementById("episode-template");
@@ -235,6 +274,7 @@ function makePageForShows(listOfShows) {
     clone.querySelector(".summary").innerHTML = eachShow.summary || "No summary available.";
     clone.querySelector(".link").href = eachShow.url || "#";
 
+    // Add click event to make show cards clickable
     const card = clone.querySelector(".card");
     card.addEventListener("click", function() {
       // Update the dropdown to show the selected show
@@ -247,12 +287,15 @@ function makePageForShows(listOfShows) {
   });
 }
 
-// Id is a "value" for Option ==> episode.id
+/**
+ * Populates the episode dropdown with all episodes from current show
+ * Creates options with formatted episode codes and names
+ * @param {Array} allEpisodes - Array of episode objects to populate dropdown with
+ */
 function dropBoxFill(allEpisodes) {
   const dropDBox = document.getElementById("dropDownBoxFill");
   dropDBox.innerHTML = "";
 
-  /////// =====================> Aida Start
   // Show All Episodes
   dropDBox.add(new Option("Show All Episodes", "all"));
 
@@ -268,10 +311,11 @@ function dropBoxFill(allEpisodes) {
   });
 }
 
-
-/////// =====================> Aida Start
-// Show All Episodes
-
+/**
+ * Populates the show dropdown with all available shows
+ * Creates options with show names, sorted alphabetically
+ * @param {Array} allShows - Array of show objects to populate dropdown with
+ */
 function dropBoxAllShows(allShows) {
   const dropDBoxShows = document.getElementById("dDBAllShows");
   dropDBoxShows.innerHTML = "";
@@ -283,9 +327,5 @@ function dropBoxAllShows(allShows) {
   });
 }
 
-/////// =====================> Aida Finish
-
-
-
-
+// Initialize the application when the page loads
 window.onload = setup;
